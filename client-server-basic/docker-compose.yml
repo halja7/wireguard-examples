@@ -1,0 +1,64 @@
+---
+services:
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE #optional
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SERVERURL=wireguard.domain.com #optional
+      - SERVERPORT=51820 #optional
+      # not specifying fixed number of peers due to dynamic quantities
+      # in real use case
+      # - PEERS=1 
+      - PEERDNS=auto #optional
+      - INTERNAL_SUBNET=10.13.13.0 #optional
+      - ALLOWEDIPS=0.0.0.0/0 #optional
+      - PERSISTENTKEEPALIVE_PEERS= #optional
+      - LOG_CONFS=true #optional
+    volumes:
+      - ./appdata/wg_confs:/config/wg_confs
+      # - /lib/modules:/lib/modules #optional
+    ports:
+      - 51820:51820/udp
+    #sysctls:
+    #  - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+
+  client1:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: client1
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ./client1:/config
+    # command: wg-quick up /config/wg_confs/wg0.conf
+    command: tail -f /dev/null
+    depends_on:
+      - wireguard
+
+  client2:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: client2
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ./client2:/config
+    # command: wg-quick up /config/wg_confs/wg0.conf
+    command: tail -f /dev/null
+    depends_on:
+      - wireguard
