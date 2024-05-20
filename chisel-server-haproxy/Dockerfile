@@ -7,6 +7,10 @@ RUN dnf install -y \
 	wget \
 	iputils \
 	net-tools \
+	iproute \
+	python3 \
+	netcat \
+	procps \
 	&& dnf clean all
 
 # Download and install Chisel
@@ -15,5 +19,11 @@ RUN curl -L https://github.com/jpillora/chisel/releases/download/v1.7.6/chisel_1
 	&& chmod +x chisel \
 	&& mv chisel /usr/local/bin/chisel
 
-# Set the entry point to chisel
-ENTRYPOINT ["chisel"]
+# Copy the start_client.sh script
+COPY start_client.sh /usr/local/bin/start_client.sh
+RUN chmod +x /usr/local/bin/start_client.sh
+
+WORKDIR /app
+
+# Set the entry point to the shell
+# ENTRYPOINT ["/bin/sh", "-c"]

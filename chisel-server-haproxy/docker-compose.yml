@@ -9,50 +9,47 @@ services:
       - "443:443/tcp"
     restart: unless-stopped
     networks:
-      - chisel_internal_network
+      - chisel_network_internal
       - internet
 
   chisel_server:
-    # image: jpillora/chisel:latest
     build: .
     container_name: chisel_server
-    command: ["server", "--port", "8000", "--reverse"]
+    command: "/usr/local/bin/chisel server --port 8000 --reverse"
     expose:
       - "8000"
     restart: unless-stopped
     networks:
-      - chisel_internal_network
+      - chisel_network_internal
 
-  chisel_client1:
-    # image: jpillora/chisel:latest
+  # job worker
+  chisel_internal_client:
     build: .
-    container_name: chisel_client1
-    command: ["client", "haproxy:443", "R:0.0.0.0:8001:localhost:80"]
+    container_name: chisel_internal_client
+    command: "/usr/local/bin/start_client.sh chisel_server 8000 8001"
+    expose:
+      - "8001"
     depends_on:
       - haproxy
     restart: unless-stopped
     networks:
-      - client_network1
-      - internet
+      - chisel_network_internal
 
-  chisel_client2:
-    # image: jpillora/chisel:latest
+  # remote node
+  chisel_external_client:
     build: .
-    container_name: chisel_client2
-    command: ["client", "haproxy:443", "R:0.0.0.0:8002:localhost:80"]
+    container_name: chisel_external_client
+    command: "/usr/local/bin/start_client.sh haproxy 443 8002"
+    expose:
+      - "8002"
     depends_on:
       - haproxy
     restart: unless-stopped
     networks:
-      - client_network2
       - internet
 
 networks:
   internet:
     driver: bridge
-  chisel_internal_network:
-    driver: bridge
-  client_network1:
-    driver: bridge
-  client_network2:
+  chisel_network_internal:
     driver: bridge
