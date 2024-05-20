@@ -1,0 +1,58 @@
+version: '3.8'
+services:
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    ports:
+      - "443:443/tcp"
+    restart: unless-stopped
+    networks:
+      - chisel_internal_network
+      - internet
+
+  chisel_server:
+    # image: jpillora/chisel:latest
+    build: .
+    container_name: chisel_server
+    command: ["server", "--port", "8000", "--reverse"]
+    expose:
+      - "8000"
+    restart: unless-stopped
+    networks:
+      - chisel_internal_network
+
+  chisel_client1:
+    # image: jpillora/chisel:latest
+    build: .
+    container_name: chisel_client1
+    command: ["client", "haproxy:443", "R:0.0.0.0:8001:localhost:80"]
+    depends_on:
+      - haproxy
+    restart: unless-stopped
+    networks:
+      - client_network1
+      - internet
+
+  chisel_client2:
+    # image: jpillora/chisel:latest
+    build: .
+    container_name: chisel_client2
+    command: ["client", "haproxy:443", "R:0.0.0.0:8002:localhost:80"]
+    depends_on:
+      - haproxy
+    restart: unless-stopped
+    networks:
+      - client_network2
+      - internet
+
+networks:
+  internet:
+    driver: bridge
+  chisel_internal_network:
+    driver: bridge
+  client_network1:
+    driver: bridge
+  client_network2:
+    driver: bridge
