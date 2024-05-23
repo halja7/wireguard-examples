@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chisel-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chisel-server
+  template:
+    metadata:
+      labels:
+        app: chisel-server
+    spec:
+      containers:
+        - name: chisel
+          image: us-west1-docker.pkg.dev/kraken-418412/dev/chisel-server:latest
+          args:
+            - "chisel"
+            - "server"
+            - "--tls-cert"
+            - "/etc/tls/tls.crt"
+            - "--tls-key"
+            - "/etc/tls/tls.key"
+            - "--tls-ca"
+            - "/etc/ca/ca.crt"
+            - "--port"
+            - "443"
+            - "--reverse"
+          ports:
+          - containerPort: 443
+          - containerPort: 8001
+          - containerPort: 8002
+          - containerPort: 8003
+          volumeMounts:
+          - name: tls
+            mountPath: "/etc/tls"
+            readOnly: true
+          - name: ca
+            mountPath: "/etc/ca"
+            readOnly: true
+      volumes:
+        - name: tls
+          secret:
+            secretName: chisel-tls-secret
+        - name: ca
+          secret:
+            secretName: chisel-ca-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chisel-server
+spec:
+  selector:
+    app: chisel-server
+  ports:
+  - protocol: TCP
+    port: 443
+    targetPort: 443
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chisel-ports
+spec:
+  type: NodePort
+  selector:
+    app: chisel-server
+  ports:
+  - protocol: TCP
+    name: tcp8001
+    port: 8001
+    targetPort: 8001
+    nodePort: 30081
+  - protocol: TCP
+    name: tcp8002
+    port: 8002
+    targetPort: 8002
+    nodePort: 30082
+  - protocol: TCP
+    name: tcp8003
+    port: 8003
+    targetPort: 8003
+    nodePort: 30083

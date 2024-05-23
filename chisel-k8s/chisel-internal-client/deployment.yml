@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chisel-internal-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chisel-internal-client
+  template:
+    metadata:
+      labels:
+        app: chisel-internal-client
+    spec:
+      containers:
+      - name: chisel-internal-client
+        image: rockylinux/rocky-toolbox:9
+        args: ["tail", "-f", "/dev/null"]

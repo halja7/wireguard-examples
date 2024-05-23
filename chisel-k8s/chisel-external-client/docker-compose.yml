@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  # remote node
+  chisel_external_client:
+    build: .
+    container_name: chisel_external_client
+    command: "/usr/local/bin/start_client.sh https://34.16.95.189 443 8001"
+    expose:
+      - "8001"
+    restart: unless-stopped
+    networks:
+      - internet
+    volumes:
+      - ./certs:/app/certs
+
+
+networks:
+  internet:
+    driver: bridge

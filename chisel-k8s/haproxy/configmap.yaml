@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haproxy-config
+data:
+  haproxy.cfg: |
+    global
+        log stdout format raw local0
+
+    defaults
+        log     global
+        mode    http
+        option  tcplog
+        timeout connect 10s
+        timeout client  1m
+        timeout server  1m
+
+    frontend fe_chisel
+        bind *:443
+        mode tcp
+
+        tcp-request inspect-delay 5s
+        tcp-request content accept if { req_ssl_hello_type 1 }
+
+        acl sni_path_1 req.ssl_sni -i example.com
+
+        use_backend be_chisel if sni_path_1
+
+    backend be_chisel
+        mode tcp
+        server chisel_server chisel-server:443 check
